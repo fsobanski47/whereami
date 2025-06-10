@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import Header from './components/header';
 import Map from './components/map';
 import Footer from './components/footer';

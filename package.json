@@ -15,7 +15,9 @@
     "react-native": "0.79.3",
     "react-native-google-fit": "^0.21.0",
     "react-native-maps": "^1.24.1",
-    "react-native-pedometer-ios-android": "^0.1.0"
+    "react-native-pedometer-ios-android": "^0.1.0",
+    "react-native-sensors": "^7.3.6",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

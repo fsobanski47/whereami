@@ -1,37 +1,73 @@
-import { useEffect, useState } from 'react';
-import { NativeEventEmitter, NativeModules } from 'react-native';
-import Pedometer from 'react-native-pedometer-ios-android';
+import {useEffect, useRef, useState} from 'react';
+import {
+  accelerometer,
+  setUpdateIntervalForType,
+  SensorTypes,
+} from 'react-native-sensors';
+import {Subscription} from 'rxjs';
+import {map, filter, bufferTime} from 'rxjs/operators';
+import {
+  PEDOMETER_BUFFER_TIME,
+  PEDOMETER_INTERVAL,
+  PEDOMETER_THRESHOLD,
+} from '../constants';
 
 export function usePedometer() {
   const [steps, setSteps] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const lastStepTimeRef = useRef(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const lastValuesRef = useRef<number[]>([]);
 
   useEffect(() => {
-    let subscription: any;
+    setUpdateIntervalForType(SensorTypes.accelerometer, PEDOMETER_INTERVAL);
 
-    Pedometer.isSupported()
-      .then((supported: boolean) => {
-        if (!supported) {
-          setError('Pedometer is not supported on this device');
-          return;
-        }
+    const subscription: Subscription = accelerometer
+      .pipe(
+        map(({x, y, z}) => Math.sqrt(x * x + y * y + z * z)),
+        bufferTime(PEDOMETER_BUFFER_TIME),
+        filter(values => values.length > 0),
+        map(values => {
+          lastValuesRef.current = [...lastValuesRef.current, ...values].slice(
+            -20,
+          );
+          return values;
+        }),
+        filter(() => {
+          const now = Date.now();
+          const timeSinceLastStep = now - lastStepTimeRef.current;
+          const recentValues = lastValuesRef.current;
 
-        const emitter = new NativeEventEmitter(NativeModules.Pedometer);
-        subscription = emitter.addListener('StepCounter', (data: { steps: number }) => {
-          setSteps(Math.floor(data.steps));
-        });
+          if (recentValues.length < 5) {
+            return false;
+          }
 
-        Pedometer.startStepCounter();
-      })
-      .catch(err => {
-        setError(err.message || 'Unknown error');
+          const average =
+            recentValues.reduce((a, b) => a + b, 0) / recentValues.length;
+          const max = Math.max(...recentValues);
+          const min = Math.min(...recentValues);
+
+          const isStep =
+            max - min > PEDOMETER_THRESHOLD &&
+            timeSinceLastStep > PEDOMETER_INTERVAL &&
+            max > average * PEDOMETER_THRESHOLD;
+
+          if (isStep) {
+            lastStepTimeRef.current = now;
+            return true;
+          }
+
+          return false;
+        }),
+      )
+      .subscribe({
+        next: () => setSteps(prev => prev + 1),
+        error: () => setErrorMessage('Accelerometer not available'),
       });
 
     return () => {
-      Pedometer.stopStepCounter();
-      subscription?.remove();
+      subscription.unsubscribe();
     };
   }, []);
 
-  return { steps, error };
+  return {steps, errorMessage};
 }
