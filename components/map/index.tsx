@@ -13,7 +13,11 @@ import type {
   GeolocationError,
 } from '@react-native-community/geolocation';
 import {useLocationTracker} from '../../hooks/use-location-tracker';
-import {TRACKER_MAXIMUM_AGE, TRACKER_TIMEOUT} from '../../constants';
+import {
+  TRACKER_MAP_LOADING_TIMEOUT,
+  TRACKER_MAXIMUM_AGE,
+  TRACKER_TIMEOUT,
+} from '../../constants';
 
 export default function Map() {
   const [location, setLocation] = useState<{
@@ -72,7 +76,7 @@ export default function Map() {
   const handleMapReady = useCallback(() => {
     setTimeout(() => {
       setIsMapReady(true);
-    }, 500);
+    }, TRACKER_MAP_LOADING_TIMEOUT);
   }, []);
 
   if (errorMessage) {

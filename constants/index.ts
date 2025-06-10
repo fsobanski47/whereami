@@ -1,7 +1,12 @@
 export const PEDOMETER_THRESHOLD = 1.2;
-export const PEDOMETER_INTERVAL = 400;
+export const PEDOMETER_INTERVAL = 500;
 export const PEDOMETER_BUFFER_TIME = 300;
 
 export const TRACKER_MAXIMUM_AGE = 1000;
 export const TRACKER_TIMEOUT = 15000;
 export const TRACKER_INTERVAL = 5000;
+export const TRACKER_MAP_LOADING_TIMEOUT = 500;
+
+export const ROUTE_STORAGE_KEY = 'LOCATION_ROUTE';
+export const PEDOMETER_STORAGE_KEY = 'PEDOMETER_STEPS';
+export const STORAGE_DATE_KEY = 'DATE';

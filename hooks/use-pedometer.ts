@@ -25,22 +25,22 @@ export function usePedometer() {
       .pipe(
         map(({x, y, z}) => Math.sqrt(x * x + y * y + z * z)),
         bufferTime(PEDOMETER_BUFFER_TIME),
-        filter(values => values.length > 0),
         map(values => {
+          if (values.length === 0) {
+            return false;
+          }
+
           lastValuesRef.current = [...lastValuesRef.current, ...values].slice(
             -20,
           );
-          return values;
-        }),
-        filter(() => {
-          const now = Date.now();
-          const timeSinceLastStep = now - lastStepTimeRef.current;
-          const recentValues = lastValuesRef.current;
 
+          const recentValues = lastValuesRef.current;
           if (recentValues.length < 5) {
             return false;
           }
 
+          const now = Date.now();
+          const timeSinceLastStep = now - lastStepTimeRef.current;
           const average =
             recentValues.reduce((a, b) => a + b, 0) / recentValues.length;
           const max = Math.max(...recentValues);
@@ -60,7 +60,12 @@ export function usePedometer() {
         }),
       )
       .subscribe({
-        next: () => setSteps(prev => prev + 1),
+        next: isStep => {
+          if (isStep) {
+            lastValuesRef.current = [];
+            setSteps(prev => prev + 1);
+          }
+        },
         error: () => setErrorMessage('Accelerometer not available'),
       });
 
