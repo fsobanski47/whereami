@@ -1,12 +1,59 @@
-whereami: a simple android app that shows user's location on Google Maps, and saves their path and step count throught the day.
+# whereami
 
-To launch on your phone:
+A simple Android app that shows the user's location on Google Maps, tracks and saves their path and step count throughout the day.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Install dependencies
+
+```bash
 npm install
-npx react-native run-android
+```
 
-To install on your phone:
+### 2. Run app on your connected Android device or emulator
+
+```bash
+npx react-native run-android
+```
+
+---
+
+## 📦 Build APK
+
+Navigate to the `android` directory first:
+
+```bash
 cd android
-./gradlew assembleDebug # FOR DEBUG BUILD
-./gradlew assembleRelease # FOR RELASE BUILD
-..
-adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Debug build
+
+```bash
+./gradlew assembleDebug
+```
+
+### Release build
+
+```bash
+./gradlew assembleRelease
+```
+
+---
+
+## 📱 Install APK on your device
+
+For debug build APK:
+
+```bash
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+For release build APK:
+
+```bash
+adb install -r app/build/outputs/apk/release/app-release.apk
+```
+
+
