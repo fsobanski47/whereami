@@ -1,24 +1,18 @@
-import React, {memo, useCallback, useEffect, useRef, useState} from 'react';
-import {
-  PermissionsAndroid,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import MapView, {Polyline, PROVIDER_GOOGLE} from 'react-native-maps';
-import Geolocation from '@react-native-community/geolocation';
 import type {
-  GeolocationResponse,
   GeolocationError,
+  GeolocationResponse,
 } from '@react-native-community/geolocation';
-import {useLocationTracker} from '../../hooks/use-location-tracker';
+import Geolocation from '@react-native-community/geolocation';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {PermissionsAndroid, Platform, Text, View} from 'react-native';
+import MapView, {Polyline, PROVIDER_GOOGLE} from 'react-native-maps';
 import {
   INITIAL_MAP_DELTA,
   TRACKER_MAP_LOADING_TIMEOUT,
   TRACKER_MAXIMUM_AGE,
   TRACKER_TIMEOUT,
 } from '../../constants';
+import {useLocationTracker} from '../../hooks/use-location-tracker';
 import styles, {polylineStyle} from '../../styles/map-styles';
 
 export default function Map() {

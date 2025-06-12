@@ -9,7 +9,7 @@ export default function Footer() {
   return (
     <View style={styles.footer}>
       <Text style={styles.footerText}>
-        {errorMessage ? `Błąd: ${errorMessage}` : `Kroki dzisiaj: ${steps}`}
+        {errorMessage ? `${errorMessage}` : `Kroki dzisiaj: ${steps}`}
       </Text>
     </View>
   );

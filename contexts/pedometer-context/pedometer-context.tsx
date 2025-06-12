@@ -38,17 +38,16 @@ export const PedometerProvider = ({children}: {children: React.ReactNode}) => {
     try {
       setDailyGoalState(goal);
       await AsyncStorage.setItem(DAILY_GOAL_STORAGE_KEY, goal.toString());
-    } catch (e) {
-      console.error('Failed to set daily goal in storage', e);
+    } catch (error) {
+      console.error('Failed to set daily goal in storage', error);
     }
   };
 
   useEffect(() => {
-    (async () => {
+    const loadData = async () => {
+      const savedDate = await AsyncStorage.getItem(DATE_STORAGE_KEY);
+      const today = getTodayDateString();
       try {
-        const savedDate = await AsyncStorage.getItem(DATE_STORAGE_KEY);
-        const today = getTodayDateString();
-
         if (savedDate !== today) {
           await AsyncStorage.setItem(DATE_STORAGE_KEY, today);
           await AsyncStorage.setItem(PEDOMETER_STORAGE_KEY, '0');
@@ -64,18 +63,22 @@ export const PedometerProvider = ({children}: {children: React.ReactNode}) => {
         if (storedGoal) {
           setDailyGoalState(Number(storedGoal));
         }
-      } catch (e) {
-        console.error('Failed to load steps from storage', e);
+      } catch (error) {
+        console.error('Failed to load async storage data', error);
       }
-    })();
+    };
+
+    loadData();
   }, []);
 
   useEffect(() => {
-    async function saveSteps() {
-      await AsyncStorage.setItem(PEDOMETER_STORAGE_KEY, steps.toString()).catch(
-        e => console.error('Failed to save steps', e),
-      );
-    }
+    const saveSteps = async () => {
+      try {
+        await AsyncStorage.setItem(PEDOMETER_STORAGE_KEY, steps.toString());
+      } catch (error) {
+        console.error('Failed loading async storage data', error);
+      }
+    };
 
     if (steps !== 0) {
       saveSteps();
@@ -90,7 +93,9 @@ export const PedometerProvider = ({children}: {children: React.ReactNode}) => {
         map(({x, y, z}) => Math.sqrt(x * x + y * y + z * z)),
         bufferTime(PEDOMETER_BUFFER_TIME),
         map(values => {
-          if (values.length === 0) return false;
+          if (values.length === 0) {
+            return false;
+          }
 
           lastValuesRef.current = [...lastValuesRef.current, ...values].slice(
             -20,
@@ -125,7 +130,7 @@ export const PedometerProvider = ({children}: {children: React.ReactNode}) => {
             setSteps(prev => prev + 1);
           }
         },
-        error: () => setErrorMessage('Accelerometer not available'),
+        error: () => setErrorMessage('Błąd odczytu akcelerometru'),
       });
 
     return () => subscription.unsubscribe();

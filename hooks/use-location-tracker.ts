@@ -18,18 +18,22 @@ export function useLocationTracker() {
 
   useEffect(() => {
     async function loadRoute() {
-      const storedData = await AsyncStorage.getItem(ROUTE_STORAGE_KEY);
-      if (storedData) {
-        const {date, route: savedRoute} = JSON.parse(storedData);
-        const savedDay = new Date(date).getDate();
-        const today = new Date().getDate();
+      try {
+        const storedData = await AsyncStorage.getItem(ROUTE_STORAGE_KEY);
+        if (storedData) {
+          const {date, route: savedRoute} = JSON.parse(storedData);
+          const savedDay = new Date(date).getDate();
+          const today = new Date().getDate();
 
-        if (savedDay !== today) {
-          await AsyncStorage.removeItem(ROUTE_STORAGE_KEY);
-          setRoute([]);
-        } else {
-          setRoute(savedRoute);
+          if (savedDay !== today) {
+            await AsyncStorage.removeItem(ROUTE_STORAGE_KEY);
+            setRoute([]);
+          } else {
+            setRoute(savedRoute);
+          }
         }
+      } catch (error) {
+        console.error('Failed to load route from async storage', error);
       }
     }
 
@@ -38,10 +42,14 @@ export function useLocationTracker() {
 
   useEffect(() => {
     async function saveRoute() {
-      await AsyncStorage.setItem(
-        ROUTE_STORAGE_KEY,
-        JSON.stringify({date: new Date().toISOString(), route}),
-      );
+      try {
+        await AsyncStorage.setItem(
+          ROUTE_STORAGE_KEY,
+          JSON.stringify({date: new Date().toISOString(), route}),
+        );
+      } catch (error) {
+        console.error('Failed to save route in async storage', error);
+      }
     }
     if (route.length > 0) {
       saveRoute();
