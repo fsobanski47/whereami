@@ -7,11 +7,14 @@ import {
   TRACKER_TIMEOUT,
 } from '../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {usePedometerContext} from '../contexts/pedometer-context/pedometer-context';
 
 export function useLocationTracker() {
   const [route, setRoute] = useState<{latitude: number; longitude: number}[]>(
     [],
   );
+  const {steps} = usePedometerContext();
+  const lastStepsRef = useRef(0);
 
   useEffect(() => {
     async function loadRoute() {
@@ -47,20 +50,23 @@ export function useLocationTracker() {
 
   useEffect(() => {
     const trackPosition = () => {
-      Geolocation.getCurrentPosition(
-        position => {
-          const {latitude, longitude} = position.coords;
-          setRoute(prev => [...prev, {latitude, longitude}]);
-        },
-        error => {
-          console.error('Location error:', error.message);
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: TRACKER_TIMEOUT,
-          maximumAge: TRACKER_MAXIMUM_AGE,
-        },
-      );
+      if (steps !== lastStepsRef.current) {
+        lastStepsRef.current = steps;
+        Geolocation.getCurrentPosition(
+          position => {
+            const {latitude, longitude} = position.coords;
+            setRoute(prev => [...prev, {latitude, longitude}]);
+          },
+          error => {
+            console.error('Location error:', error.message);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: TRACKER_TIMEOUT,
+            maximumAge: TRACKER_MAXIMUM_AGE,
+          },
+        );
+      }
     };
 
     const intervalId = setInterval(trackPosition, TRACKER_INTERVAL);
@@ -68,7 +74,7 @@ export function useLocationTracker() {
     return () => {
       clearInterval(intervalId);
     };
-  }, []);
+  }, [steps]);
 
   return route;
 }

@@ -1,25 +1,33 @@
-import {useEffect, useRef, useState} from 'react';
-import {
-  accelerometer,
-  setUpdateIntervalForType,
-  SensorTypes,
-} from 'react-native-sensors';
-import {Subscription} from 'rxjs';
-import {map, filter, bufferTime} from 'rxjs/operators';
+import {createContext, useContext, useEffect, useRef, useState} from 'react';
+import {getTodayDateString} from '../../utils';
 import {
   PEDOMETER_BUFFER_TIME,
   PEDOMETER_INTERVAL,
   PEDOMETER_STORAGE_KEY,
   PEDOMETER_THRESHOLD,
   STORAGE_DATE_KEY,
-} from '../constants';
+} from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {getTodayDateString} from '../utils';
+import {
+  accelerometer,
+  SensorTypes,
+  setUpdateIntervalForType,
+} from 'react-native-sensors';
+import {bufferTime, map, Subscription} from 'rxjs';
 
-export function usePedometer() {
+type PedometerContextType = {
+  steps: number;
+  errorMessage: string | null;
+};
+
+const PedometerContext = createContext<PedometerContextType | undefined>(
+  undefined,
+);
+
+export const PedometerProvider = ({children}: {children: React.ReactNode}) => {
   const [steps, setSteps] = useState(0);
-  const lastStepTimeRef = useRef(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const lastStepTimeRef = useRef(0);
   const lastValuesRef = useRef<number[]>([]);
 
   useEffect(() => {
@@ -45,9 +53,15 @@ export function usePedometer() {
   }, []);
 
   useEffect(() => {
-    AsyncStorage.setItem(PEDOMETER_STORAGE_KEY, steps.toString()).catch(e =>
-      console.error('Failed to save steps', e),
-    );
+    async function saveSteps() {
+      await AsyncStorage.setItem(PEDOMETER_STORAGE_KEY, steps.toString()).catch(
+        e => console.error('Failed to save steps', e),
+      );
+    }
+
+    if (steps !== 0) {
+      saveSteps();
+    }
   }, [steps]);
 
   useEffect(() => {
@@ -58,25 +72,20 @@ export function usePedometer() {
         map(({x, y, z}) => Math.sqrt(x * x + y * y + z * z)),
         bufferTime(PEDOMETER_BUFFER_TIME),
         map(values => {
-          if (values.length === 0) {
-            return false;
-          }
+          if (values.length === 0) return false;
 
           lastValuesRef.current = [...lastValuesRef.current, ...values].slice(
             -20,
           );
 
-          const recentValues = lastValuesRef.current;
-          if (recentValues.length < 5) {
-            return false;
-          }
-
           const now = Date.now();
           const timeSinceLastStep = now - lastStepTimeRef.current;
+
           const average =
-            recentValues.reduce((a, b) => a + b, 0) / recentValues.length;
-          const max = Math.max(...recentValues);
-          const min = Math.min(...recentValues);
+            lastValuesRef.current.reduce((a, b) => a + b, 0) /
+            lastValuesRef.current.length;
+          const max = Math.max(...lastValuesRef.current);
+          const min = Math.min(...lastValuesRef.current);
 
           const isStep =
             max - min > PEDOMETER_THRESHOLD &&
@@ -101,10 +110,22 @@ export function usePedometer() {
         error: () => setErrorMessage('Accelerometer not available'),
       });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  return {steps, errorMessage};
-}
+  return (
+    <PedometerContext.Provider value={{steps, errorMessage}}>
+      {children}
+    </PedometerContext.Provider>
+  );
+};
+
+export const usePedometerContext = () => {
+  const context = useContext(PedometerContext);
+  if (!context) {
+    throw new Error(
+      'usePedometerContext must be used within a PedometerProvider',
+    );
+  }
+  return context;
+};
