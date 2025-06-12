@@ -4,6 +4,7 @@ import Header from './components/header';
 import Map from './components/map';
 import Footer from './components/footer';
 import {PedometerProvider} from './contexts/pedometer-context/pedometer-context';
+import styles from './styles/app-styles';
 
 export default function App() {
   useEffect(() => {});
@@ -17,9 +18,3 @@ export default function App() {
     </PedometerProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

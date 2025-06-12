@@ -14,10 +14,12 @@ import type {
 } from '@react-native-community/geolocation';
 import {useLocationTracker} from '../../hooks/use-location-tracker';
 import {
+  INITIAL_MAP_DELTA,
   TRACKER_MAP_LOADING_TIMEOUT,
   TRACKER_MAXIMUM_AGE,
   TRACKER_TIMEOUT,
 } from '../../constants';
+import styles, {polylineStyle} from '../../styles/map-styles';
 
 export default function Map() {
   const [location, setLocation] = useState<{
@@ -106,23 +108,12 @@ export default function Map() {
       initialRegion={{
         latitude: location.latitude,
         longitude: location.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
+        latitudeDelta: INITIAL_MAP_DELTA,
+        longitudeDelta: INITIAL_MAP_DELTA,
       }}>
       {isMapReady && route.length > 1 && (
-        <Polyline coordinates={route} strokeColor="#1e90ff" strokeWidth={4} />
+        <Polyline coordinates={route} {...polylineStyle} />
       )}
     </MapView>
   );
 }
-
-const styles = StyleSheet.create({
-  map: {
-    flex: 1,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});

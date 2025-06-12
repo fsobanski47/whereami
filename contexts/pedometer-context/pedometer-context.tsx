@@ -1,11 +1,12 @@
 import {createContext, useContext, useEffect, useRef, useState} from 'react';
 import {getTodayDateString} from '../../utils';
 import {
+  DAILY_GOAL_STORAGE_KEY,
+  DATE_STORAGE_KEY,
   PEDOMETER_BUFFER_TIME,
   PEDOMETER_INTERVAL,
   PEDOMETER_STORAGE_KEY,
   PEDOMETER_THRESHOLD,
-  STORAGE_DATE_KEY,
 } from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -17,6 +18,8 @@ import {bufferTime, map, Subscription} from 'rxjs';
 
 type PedometerContextType = {
   steps: number;
+  dailyGoal: number;
+  setDailyGoal: (goal: number) => void;
   errorMessage: string | null;
 };
 
@@ -27,17 +30,27 @@ const PedometerContext = createContext<PedometerContextType | undefined>(
 export const PedometerProvider = ({children}: {children: React.ReactNode}) => {
   const [steps, setSteps] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [dailyGoal, setDailyGoalState] = useState(2000);
   const lastStepTimeRef = useRef(0);
   const lastValuesRef = useRef<number[]>([]);
+
+  const setDailyGoal = async (goal: number) => {
+    try {
+      setDailyGoalState(goal);
+      await AsyncStorage.setItem(DAILY_GOAL_STORAGE_KEY, goal.toString());
+    } catch (e) {
+      console.error('Failed to set daily goal in storage', e);
+    }
+  };
 
   useEffect(() => {
     (async () => {
       try {
-        const savedDate = await AsyncStorage.getItem(STORAGE_DATE_KEY);
+        const savedDate = await AsyncStorage.getItem(DATE_STORAGE_KEY);
         const today = getTodayDateString();
 
         if (savedDate !== today) {
-          await AsyncStorage.setItem(STORAGE_DATE_KEY, today);
+          await AsyncStorage.setItem(DATE_STORAGE_KEY, today);
           await AsyncStorage.setItem(PEDOMETER_STORAGE_KEY, '0');
           setSteps(0);
         } else {
@@ -45,6 +58,11 @@ export const PedometerProvider = ({children}: {children: React.ReactNode}) => {
           if (savedSteps !== null) {
             setSteps(Number(savedSteps));
           }
+        }
+
+        const storedGoal = await AsyncStorage.getItem(DAILY_GOAL_STORAGE_KEY);
+        if (storedGoal) {
+          setDailyGoalState(Number(storedGoal));
         }
       } catch (e) {
         console.error('Failed to load steps from storage', e);
@@ -114,7 +132,8 @@ export const PedometerProvider = ({children}: {children: React.ReactNode}) => {
   }, []);
 
   return (
-    <PedometerContext.Provider value={{steps, errorMessage}}>
+    <PedometerContext.Provider
+      value={{steps, dailyGoal, setDailyGoal, errorMessage}}>
       {children}
     </PedometerContext.Provider>
   );

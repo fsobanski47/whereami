@@ -7,6 +7,9 @@ export const TRACKER_TIMEOUT = 15000;
 export const TRACKER_INTERVAL = 2000;
 export const TRACKER_MAP_LOADING_TIMEOUT = 500;
 
+export const INITIAL_MAP_DELTA = 0.01;
+
 export const ROUTE_STORAGE_KEY = 'LOCATION_ROUTE';
 export const PEDOMETER_STORAGE_KEY = 'PEDOMETER_STEPS';
-export const STORAGE_DATE_KEY = 'DATE';
+export const DATE_STORAGE_KEY = 'DATE';
+export const DAILY_GOAL_STORAGE_KEY = 'DAILY_GOAL';

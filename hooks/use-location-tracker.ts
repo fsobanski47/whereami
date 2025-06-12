@@ -61,7 +61,7 @@ export function useLocationTracker() {
             console.error('Location error:', error.message);
           },
           {
-            enableHighAccuracy: true,
+            enableHighAccuracy: false,
             timeout: TRACKER_TIMEOUT,
             maximumAge: TRACKER_MAXIMUM_AGE,
           },

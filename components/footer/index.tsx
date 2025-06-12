@@ -1,6 +1,7 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {Text, View} from 'react-native';
 import {usePedometerContext} from '../../contexts/pedometer-context/pedometer-context';
+import styles from '../../styles/footer-styles';
 
 export default function Footer() {
   const {steps, errorMessage} = usePedometerContext();
@@ -13,18 +14,3 @@ export default function Footer() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  footer: {
-    height: 60,
-    backgroundColor: '#222',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 50,
-  },
-  footerText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-});
