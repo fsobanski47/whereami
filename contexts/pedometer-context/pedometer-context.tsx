@@ -1,5 +1,4 @@
 import {createContext, useContext, useEffect, useRef, useState} from 'react';
-import {getTodayDateString} from '../../utils';
 import {
   DAILY_GOAL_STORAGE_KEY,
   DATE_STORAGE_KEY,
@@ -44,39 +43,51 @@ export const PedometerProvider = ({children}: {children: React.ReactNode}) => {
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      const savedDate = await AsyncStorage.getItem(DATE_STORAGE_KEY);
-      const today = getTodayDateString();
+    const loadStepsData = async () => {
       try {
-        if (savedDate !== today) {
-          await AsyncStorage.setItem(DATE_STORAGE_KEY, today);
-          await AsyncStorage.setItem(PEDOMETER_STORAGE_KEY, '0');
-          setSteps(0);
-        } else {
-          const savedSteps = await AsyncStorage.getItem(PEDOMETER_STORAGE_KEY);
-          if (savedSteps !== null) {
-            setSteps(Number(savedSteps));
-          }
-        }
+        const storedData = await AsyncStorage.getItem(PEDOMETER_STORAGE_KEY);
 
-        const storedGoal = await AsyncStorage.getItem(DAILY_GOAL_STORAGE_KEY);
-        if (storedGoal) {
-          setDailyGoalState(Number(storedGoal));
+        if (storedData) {
+          const {date, steps: savedSteps} = JSON.parse(storedData);
+          const savedDay = new Date(date).getDate();
+          const today = new Date().getDate();
+
+          if (savedDay !== today) {
+            await AsyncStorage.removeItem(PEDOMETER_STORAGE_KEY);
+            setSteps(0);
+          } else {
+            setSteps(savedSteps);
+          }
         }
       } catch (error) {
         console.error('Failed to load async storage data', error);
       }
     };
 
-    loadData();
+    const loadDailyGoalData = async () => {
+      try {
+        const storedGoal = await AsyncStorage.getItem(DAILY_GOAL_STORAGE_KEY);
+        if (storedGoal) {
+          setDailyGoalState(Number(storedGoal));
+        }
+      } catch (error) {
+        console.error('Failed to load async storage goal data', error);
+      }
+    };
+
+    loadDailyGoalData();
+    loadStepsData();
   }, []);
 
   useEffect(() => {
     const saveSteps = async () => {
       try {
-        await AsyncStorage.setItem(PEDOMETER_STORAGE_KEY, steps.toString());
+        await AsyncStorage.setItem(
+          PEDOMETER_STORAGE_KEY,
+          JSON.stringify({date: new Date().toISOString(), steps}),
+        );
       } catch (error) {
-        console.error('Failed loading async storage data', error);
+        console.error('Failed to save steps in async storage', error);
       }
     };
 
